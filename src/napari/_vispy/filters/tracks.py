@@ -57,15 +57,21 @@ class TracksFilter(Filter):
                     alpha = 0.;
                 }
             } else {
-                // fade the track into the temporal distance, scaled by the
-                // maximum tail and head length from the gui
-                float fade = ($head_length + $current_time - $a_vertex_time) / ($tail_length + $head_length);
-                alpha = clamp(1.0-fade, 0.0, 1.0);
-            }
-
-            // when use_fade is disabled, the entire track is visible
-            if ($use_fade == 0) {
-                alpha = 1.0;
+                if ($use_fade == 0) {
+                    // when use_fade is disabled, show full opacity within tail_length
+                    // but still respect the tail_length boundary
+                    if ($a_vertex_time >= $current_time - $tail_length) {
+                        alpha = 1.0;
+                    } else {
+                        // Use a very negative alpha to ensure fragments are discarded
+                        alpha = -1000.0;
+                    }
+                } else {
+                    // fade the track into the temporal distance, scaled by the
+                    // maximum tail and head length from the gui
+                    float fade = ($head_length + $current_time - $a_vertex_time) / ($tail_length + $head_length);
+                    alpha = clamp(1.0-fade, 0.0, 1.0);
+                }
             }
 
             // set the vertex alpha according to the fade
@@ -77,13 +83,20 @@ class TracksFilter(Filter):
         varying vec4 v_track_color;
         void apply_track_shading() {
 
+            float alpha = v_track_color.a;
+
+            // when use_fade is disabled, apply sharp threshold to prevent interpolation
+            if ($use_fade == 0) {
+                alpha = alpha > 0.5 ? 1.0 : 0.0;
+            }
+
             // if the alpha is below the threshold, discard the fragment
-            if( v_track_color.a <= 0.0 ) {
+            if( alpha <= 0.0 ) {
                 discard;
             }
 
             // interpolate
-            gl_FragColor.a = clamp(v_track_color.a * gl_FragColor.a, 0.0, 1.0);
+            gl_FragColor.a = clamp(alpha * gl_FragColor.a, 0.0, 1.0);
         }
     """
 
@@ -124,6 +137,7 @@ class TracksFilter(Filter):
     def use_fade(self, value: bool):
         self._use_fade = value
         self.vshader['use_fade'] = float(self._use_fade)
+        self.fshader['use_fade'] = float(self._use_fade)
 
     @property
     def tail_length(self) -> float:
