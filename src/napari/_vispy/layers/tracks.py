@@ -19,6 +19,7 @@ class VispyTracksLayer(VispyBaseLayer):
         self.layer.events.display_id.connect(self._on_appearance_change)
         self.layer.events.display_tail.connect(self._on_appearance_change)
         self.layer.events.display_graph.connect(self._on_appearance_change)
+        self.layer.events.use_fade.connect(self._on_appearance_change)
 
         self.layer.events.color_by.connect(self._on_appearance_change)
         self.layer.events.colormap.connect(self._on_appearance_change)

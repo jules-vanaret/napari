@@ -10,6 +10,7 @@ from napari._qt.layer_controls.widgets._tracks import (
     QtTailDisplayCheckBoxControl,
     QtTailLengthSliderControl,
     QtTailWidthSliderControl,
+    QtUseFadeCheckBoxControl,
 )
 from napari.layers.base._base_constants import Mode
 
@@ -43,6 +44,8 @@ class QtTracksControls(QtLayerControls):
         Widget that wraps a slider controlling tail length of the layer.
     _tail_width_slider_control : napari._qt.layer_controls.widgets._tracks.QtTailWidthSliderControl
         Widget that wraps a slider controlling tail width of the layer.
+    _use_fade_checkbox_control : napari._qt.layer_controls.widgets._tracks.QtUseFadeCheckBoxControl
+        Widget that wraps a checkbox controlling whether tracks fade over time.
     """
 
     layer: 'napari.layers.Tracks'
@@ -79,3 +82,5 @@ class QtTracksControls(QtLayerControls):
         self._add_widget_controls(self._id_checkbox_control)
         self._graph_checkbox_control = QtGraphCheckBoxControl(self, layer)
         self._add_widget_controls(self._graph_checkbox_control)
+        self._use_fade_checkbox_control = QtUseFadeCheckBoxControl(self, layer)
+        self._add_widget_controls(self._use_fade_checkbox_control)

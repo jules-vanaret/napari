@@ -98,6 +98,10 @@ class Tracks(Layer):
     units : tuple of str or pint.Unit, optional
         Units of the layer data in world coordinates.
         If not provided, the default units are assumed to be pixels.
+    use_fade : bool
+        Whether to enable fading of track tails over time. When True, 
+        fading will occur when the time dimension is not displayed.
+        When False, tracks will not fade regardless of time dimension display.
     visible : bool
         Whether the layer visual is currently being displayed.
     """
@@ -133,6 +137,7 @@ class Tracks(Layer):
         tail_width: int = 2,
         translate=None,
         units=None,
+        use_fade: bool = True,
         visible=True,
     ) -> None:
         # if not provided with any data, set up an empty layer in 2D+t
@@ -174,6 +179,7 @@ class Tracks(Layer):
             properties=Event,
             rebuild_tracks=Event,
             rebuild_graph=Event,
+            use_fade=Event,
         )
 
         # track manager deals with data slicing, graph building and properties
@@ -198,6 +204,7 @@ class Tracks(Layer):
         self.display_id = False
         self.display_tail = True
         self.display_graph = True
+        self._use_fade = use_fade
 
         # set the data, features, and graph
         self.data = data
@@ -257,6 +264,7 @@ class Tracks(Layer):
                 'tail_length': self.tail_length,
                 'head_length': self.head_length,
                 'features': self.features,
+                'use_fade': self._use_fade,
             }
         )
         return state
@@ -382,8 +390,14 @@ class Tracks(Layer):
     @property
     def use_fade(self) -> bool:
         """toggle whether we fade the tail of the track, depending on whether
-        the time dimension is displayed"""
-        return 0 in self._slice_input.not_displayed
+        the time dimension is displayed and user preference"""
+        return (0 in self._slice_input.not_displayed) and self._use_fade
+
+    @use_fade.setter
+    def use_fade(self, value: bool) -> None:
+        """Set whether to fade track tails."""
+        self._use_fade = value
+        self.events.use_fade()
 
     @property
     def data(self) -> np.ndarray:
